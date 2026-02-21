@@ -1,0 +1,46 @@
+send_message:
+  name: Nachricht senden
+    description: Sendet eine WhatsApp Nachricht
+      fields:
+          chat_id:
+                description: Empfänger
+                      example: "@s.whatsapp.net / @g.us"
+                          message:
+                                description: Nachrichtentext
+                                      example: "Hallo Welt"
+
+                                      send_media:
+                                        name: Medium senden
+                                          description: Sendet Medien über die WhatsApp API
+                                            fields:
+                                                chat_id:
+                                                      description: Empfänger
+                                                            example: "@s.whatsapp.net / @g.us"
+                                                                url:
+                                                                      description: Medien-URL
+                                                                            example: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4"
+                                                                                caption:
+                                                                                      description: Bild-/Video-Untertitel
+                                                                                            example: Big Buck Bunny
+                                                                                                sendMediaAsDocument:
+                                                                                                      description: Als Dokument senden
+                                                                                                            default: false
+                                                                                                                sendAudioAsVoice:
+                                                                                                                      description: Audio als Voice senden
+                                                                                                                            default: false
+                                                                                                                                sendVideoAsGif:
+                                                                                                                                      description: Video als GIF senden
+                                                                                                                                            default: false
+                                                                                                                                                sendMediaAsSticker:
+                                                                                                                                                      description: Als Sticker senden
+                                                                                                                                                            default: false
+                                                                                                                                                                sendMediaAsHd:
+                                                                                                                                                                      description: in HD senden
+                                                                                                                                                                            default: false
+                                                                                                                                                                                isViewOnce:
+                                                                                                                                                                                      description: Einmaliges Ansehen
+                                                                                                                                                                                            default: false
+                                                                                                                                                                                                linkPreview:
+                                                                                                                                                                                                      description: Link Preview
+                                                                                                                                                                                                            default: false
+                                                                                                                                                                                                            

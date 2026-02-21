@@ -1,0 +1,10 @@
+{
+  "domain": "whatsapp",
+  "name": "WhatsApp Client",
+  "version": "1.0.0",
+  "documentation": "https://example.com",
+  "requirements": ["aiohttp"],
+  "codeowners": ["@tobias.kammerl@web.de"],
+  "config_flow": true,
+  "platforms": ["notify"]
+}
