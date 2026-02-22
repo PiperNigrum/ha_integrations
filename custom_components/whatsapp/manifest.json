@@ -1,7 +1,7 @@
 {
   "domain": "whatsapp",
   "name": "WhatsApp Client",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "documentation": "https://example.com",
   "requirements": ["aiohttp"],
   "codeowners": ["@tobias.kammerl@web.de"],
