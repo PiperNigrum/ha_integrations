@@ -1,16 +1,10 @@
 from homeassistant.components.notify import BaseNotificationService
 
 async def async_get_service(hass, config, discovery_info=None):
-    # discovery_info entscheidet, welcher Dienst erzeugt wird
-    service_type = discovery_info.get("service")
-
-    if service_type == "send_message":
-        return WhatsAppSendMessageService(hass, "whatsapp_send_message")
-
-    if service_type == "send_media":
-        return WhatsAppSendMediaService(hass, "whatsapp_send_media")
-
-    return None
+    return [
+        WhatsAppSendMessageService(hass, "whatsapp_send_message"),
+        WhatsAppSendMediaService(hass, "whatsapp_send_media")
+    ]
 
 
 class WhatsAppSendMessageService(BaseNotificationService):
@@ -51,7 +45,6 @@ class WhatsAppSendMediaService(BaseNotificationService):
     async def async_send_message(self, message="", **kwargs):
         data = kwargs.get("data", {})
         title = kwargs.get("title", "")
-
         caption = f"*{title}*\n{message}" if title else message
 
         chat_id = self.hass.states.get("sensor.whatsapp_tobias").state
