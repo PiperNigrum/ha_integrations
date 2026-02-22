@@ -1,10 +1,22 @@
 from homeassistant.components.notify import BaseNotificationService
 
+from .const import (
+    CONF_SERVICE,
+    SERVICE_SEND_MESSAGE,
+    SERVICE_SEND_MEDIA,
+)
+
+
 async def async_get_service(hass, config, discovery_info=None):
-    return [
-        WhatsAppSendMessageService(hass, "whatsapp_send_message"),
-        WhatsAppSendMediaService(hass, "whatsapp_send_media")
-    ]
+    service_type = config.get(CONF_SERVICE)
+
+    if service_type == SERVICE_SEND_MESSAGE:
+        return WhatsAppSendMessageService(hass, "send_message")
+
+    if service_type == SERVICE_SEND_MEDIA:
+        return WhatsAppSendMediaService(hass, "send_media")
+
+    return None
 
 
 class WhatsAppSendMessageService(BaseNotificationService):
@@ -18,18 +30,15 @@ class WhatsAppSendMessageService(BaseNotificationService):
 
     async def async_send_message(self, message="", **kwargs):
         title = kwargs.get("title", "")
-        combined_message = f"*{title}*\n{message}" if title else message
+        combined = f"*{title}*\n{message}" if title else message
 
         chat_id = self.hass.states.get("sensor.whatsapp_tobias").state
 
         await self.hass.services.async_call(
-            "WhatsApp",
+            "whatsapp",
             "send_message",
-            {
-                "chat_id": chat_id,
-                "message": combined_message
-            },
-            blocking=True
+            {"chat_id": chat_id, "message": combined},
+            blocking=True,
         )
 
 
@@ -63,8 +72,8 @@ class WhatsAppSendMediaService(BaseNotificationService):
         }
 
         await self.hass.services.async_call(
-            "WhatsApp",
+            "whatsapp",
             "send_media",
             payload,
-            blocking=True
+            blocking=True,
         )
