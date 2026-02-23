@@ -5,6 +5,9 @@ send_message:
     chat_id:
       description: Empfänger
       example: "@s.whatsapp.net / @g.us"
+    title:
+      description: Titel (optional). Wird als *Titel* vor die Nachricht gesetzt.
+      example: "Wichtig"
     message:
       description: Nachrichtentext
       example: "Hallo Welt"
@@ -19,9 +22,12 @@ send_media:
     url:
       description: Medien-URL
       example: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4"
+    title:
+      description: Titel (optional). Wird als *Titel* vor die Caption gesetzt.
+      example: "Wichtig"
     caption:
       description: Bild-/Video-Untertitel
-      example: Big Buck Bunny
+      example: "Big Buck Bunny"
     sendMediaAsDocument:
       description: Als Dokument senden
       default: false
