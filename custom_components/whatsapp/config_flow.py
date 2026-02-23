@@ -8,26 +8,22 @@ class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        """Erstinstallation oder Neukonfiguration."""
+        """Erstinstallation oder Neukonfiguration (ein Eintrag bleibt bestehen)."""
         errors = {}
 
-        # Prüfen, ob es schon einen Eintrag gibt
+        # Falls bereits ein Eintrag existiert, holen wir ihn (nur der erste)
         existing_entry = next(iter(self._async_current_entries()), None)
 
         if user_input is not None:
             if existing_entry:
-                # Bestehenden Eintrag aktualisieren
-                self.hass.config_entries.async_update_entry(
-                    existing_entry, data=user_input
-                )
+                # Bestehenden Eintrag aktualisieren und Flow beenden
+                self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
                 return self.async_abort(reason="reconfigured")
 
             # Neuen Eintrag anlegen
-            return self.async_create_entry(
-                title="WhatsApp Client",
-                data=user_input,
-            )
+            return self.async_create_entry(title="WhatsApp Client", data=user_input)
 
+        # Defaults aus vorhandenem Eintrag verwenden, falls vorhanden
         defaults = existing_entry.data if existing_entry else {}
 
         schema = vol.Schema(
@@ -37,8 +33,4 @@ class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=schema,
-            errors=errors,
-        )
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
