@@ -10,18 +10,12 @@ _NOTIFY_SERVICE_MEDIA = "whatsapp_send_media"
 
 
 async def async_get_service(hass: HomeAssistant, config: Dict[str, Any], discovery_info=None):
-    """Set up notify services as wrappers that call the whatsapp.* services.
+    """Register two notify.* wrapper services that forward to whatsapp.* services.
 
-    We register two explicit notify services so they appear as:
-      - notify.whatsapp_send_message
-      - notify.whatsapp_send_media
-
-    The handlers simply forward the payload to the corresponding whatsapp service.
-    We also return a minimal Notify service instance to satisfy the platform API.
+    Returns a minimal notify service instance to satisfy the platform API.
     """
-    # Avoid double registration
-    registered = hass.data.setdefault(DOMAIN, {}).setdefault("notify_registered", False)
-    if not registered:
+    # Ensure we only register the notify wrapper services once
+    if not hass.data.setdefault(DOMAIN, {}).get("notify_registered"):
         async def _handle_notify_send_message(call: ServiceCall) -> None:
             payload = {
                 "chat_id": call.data.get("chat_id"),
@@ -55,13 +49,12 @@ async def async_get_service(hass: HomeAssistant, config: Dict[str, Any], discove
 
         hass.data[DOMAIN]["notify_registered"] = True
 
-    # Return a minimal notify service instance (not used for the explicit notify services above,
-    # but required by the notify platform contract).
+    # Return a minimal notify service instance (proxy). HA expects an object here.
     return _WhatsAppNotifyProxy(hass)
 
 
 class _WhatsAppNotifyProxy(BaseNotificationService):
-    """Minimal proxy notify service to satisfy HA notify platform API."""
+    """Minimal proxy notify service to satisfy the notify platform contract."""
 
     def __init__(self, hass: HomeAssistant):
         self.hass = hass
