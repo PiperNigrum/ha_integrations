@@ -27,17 +27,15 @@ def _build_target_url(base: Optional[str], port: Optional[int], chat_id: str) ->
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up WhatsApp services from a single config entry.
+    """Set up WhatsApp services from a single config entry."""
 
-    - Stores the config centrally in hass.data[DOMAIN]["config"] so handlers always
-      read the latest values.
-    - Registers two services:
-        * whatsapp.send_message
-        * whatsapp.send_media
-    - Registers an update listener so changes via the config flow update the stored config.
-    """
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN]["config"] = entry.data
+
+    # ❗ Änderung 1: Optionen haben Vorrang vor data
+    hass.data[DOMAIN]["config"] = {
+        **entry.data,
+        **entry.options,   # ← geändert
+    }
 
     session = async_get_clientsession(hass)
 
@@ -65,13 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if title:
             message = f"*{title}*\n{message}"
 
-        # Read the latest config from hass.data so updates take effect immediately
+        # Immer die neuesten Werte aus hass.data lesen
         cfg = hass.data.get(DOMAIN, {}).get("config", {})
         base = cfg.get(CONF_BASE_URL)
         port = cfg.get(CONF_PORT, DEFAULT_PORT)
 
         url = _build_target_url(base, port, chat_id)
-        # Send the raw message string; JSON encoder will escape newlines as \n correctly.
         payload = {"msg": message}
         await _post_json(url, payload)
 
@@ -92,7 +89,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if title:
             caption = f"*{title}*\n{caption}"
 
-        # Read the latest config from hass.data so updates take effect immediately
         cfg = hass.data.get(DOMAIN, {}).get("config", {})
         base = cfg.get(CONF_BASE_URL)
         port = cfg.get(CONF_PORT, DEFAULT_PORT)
@@ -101,7 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         payload = {
             "url": url_media.replace("\n", ""),
             "options": {
-                # Send raw caption string; JSON encoder will escape newlines as \n correctly.
                 "caption": caption,
                 "sendMediaAsDocument": bool(call.data.get("sendMediaAsDocument", False)),
                 "sendAudioAsVoice": bool(call.data.get("sendAudioAsVoice", False)),
@@ -116,17 +111,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await _post_json(target, payload)
 
-    # Register services (domain: whatsapp) only once
+    # Register services only once
     services_registered = hass.data[DOMAIN].setdefault("services_registered", False)
     if not services_registered:
         hass.services.async_register(DOMAIN, SERVICE_SEND_MESSAGE, _handle_send_message)
         hass.services.async_register(DOMAIN, SERVICE_SEND_MEDIA, _handle_send_media)
         hass.data[DOMAIN]["services_registered"] = True
 
-    # Update listener: keep hass.data[DOMAIN]["config"] in sync when the entry is updated
+    # ❗ Änderung 2: Update listener muss auch options berücksichtigen
     async def _async_update_listener(hass_inner: HomeAssistant, updated_entry: ConfigEntry) -> None:
         hass_inner.data.setdefault(DOMAIN, {})
-        hass_inner.data[DOMAIN]["config"] = updated_entry.data
+        hass_inner.data[DOMAIN]["config"] = {
+            **updated_entry.data,
+            **updated_entry.options,   # ← geändert
+        }
         _LOGGER.debug("WhatsApp config entry updated, new config stored in hass.data[%s]['config']", DOMAIN)
 
     entry.add_update_listener(_async_update_listener)
@@ -146,7 +144,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception:
         _LOGGER.debug("Could not remove service %s.%s", DOMAIN, SERVICE_SEND_MEDIA)
 
-    # Clean up stored data
     hass.data.get(DOMAIN, {}).pop("config", None)
     hass.data.get(DOMAIN, {}).pop("services_registered", None)
 
