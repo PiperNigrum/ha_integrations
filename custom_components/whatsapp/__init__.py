@@ -37,7 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     - Registers an update listener so changes via the config flow update the stored config.
     """
     hass.data.setdefault(DOMAIN, {})
-    # store config centrally so handlers always read the latest values
     hass.data[DOMAIN]["config"] = entry.data
 
     session = async_get_clientsession(hass)
@@ -72,7 +71,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         port = cfg.get(CONF_PORT, DEFAULT_PORT)
 
         url = _build_target_url(base, port, chat_id)
-        payload = {"msg": message.replace("\n", "\\n")}
+        # Send the raw message string; JSON encoder will escape newlines as \n correctly.
+        payload = {"msg": message}
         await _post_json(url, payload)
 
     async def _handle_send_media(call: ServiceCall) -> None:
@@ -101,7 +101,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         payload = {
             "url": url_media.replace("\n", ""),
             "options": {
-                "caption": caption.replace("\n", "\\n"),
+                # Send raw caption string; JSON encoder will escape newlines as \n correctly.
+                "caption": caption,
                 "sendMediaAsDocument": bool(call.data.get("sendMediaAsDocument", False)),
                 "sendAudioAsVoice": bool(call.data.get("sendAudioAsVoice", False)),
                 "sendVideoAsGif": bool(call.data.get("sendVideoAsGif", False)),
