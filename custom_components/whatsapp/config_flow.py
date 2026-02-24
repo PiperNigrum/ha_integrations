@@ -4,7 +4,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_HOST, CONF_PORT
+from .const import DOMAIN, CONF_BASE_URL, CONF_PORT
 
 
 class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -20,7 +20,7 @@ class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         schema = vol.Schema({
-            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_BASE_URL): str,
             vol.Required(CONF_PORT, default=3000): int,
         })
 
@@ -46,7 +46,7 @@ class WhatsAppOptionsFlow(config_entries.OptionsFlow):
         options = self.config_entry.options
 
         schema = vol.Schema({
-            vol.Required(CONF_HOST, default=options.get(CONF_HOST, data.get(CONF_HOST))): str,
+            vol.Required(CONF_BASE_URL, default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL))): str,
             vol.Required(CONF_PORT, default=options.get(CONF_PORT, data.get(CONF_PORT))): int,
         })
 
