@@ -4,7 +4,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_BASE_URL, CONF_PORT
+from .const import DOMAIN, CONF_BASE_URL, CONF_PORT, DEFAULT_PORT
 
 
 class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -20,8 +20,15 @@ class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         schema = vol.Schema({
-            vol.Required(CONF_BASE_URL): str,
-            vol.Required(CONF_PORT, default=3000): int,
+            vol.Required(
+                CONF_BASE_URL,
+                description="Host / Base URL"
+            ): str,
+            vol.Required(
+                CONF_PORT,
+                default=DEFAULT_PORT,
+                description="Port"
+            ): int,
         })
 
         return self.async_show_form(step_id="user", data_schema=schema)
@@ -46,8 +53,16 @@ class WhatsAppOptionsFlow(config_entries.OptionsFlow):
         options = self.config_entry.options
 
         schema = vol.Schema({
-            vol.Required(CONF_BASE_URL, default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL))): str,
-            vol.Required(CONF_PORT, default=options.get(CONF_PORT, data.get(CONF_PORT))): int,
+            vol.Required(
+                CONF_BASE_URL,
+                default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL)),
+                description="Host / Base URL"
+            ): str,
+            vol.Required(
+                CONF_PORT,
+                default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT)),
+                description="Port"
+            ): int,
         })
 
         return self.async_show_form(step_id="init", data_schema=schema)
