@@ -1,33 +1,53 @@
+from __future__ import annotations
+
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_BASE_URL, CONF_PORT, DEFAULT_PORT
+from .const import DOMAIN, CONF_HOST, CONF_PORT
 
 
 class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle the initial config flow."""
+
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        """Create or reconfigure a single config entry for the integration."""
-        errors = {}
-
-        # Only keep a single entry — if one exists, update it
-        existing_entry = next(iter(self._async_current_entries()), None)
-
         if user_input is not None:
-            if existing_entry:
-                self.hass.config_entries.async_update_entry(existing_entry, data=user_input)
-                return self.async_abort(reason="reconfigured")
+            return self.async_create_entry(
+                title="WhatsApp",
+                data=user_input
+            )
 
-            return self.async_create_entry(title="WhatsApp Client", data=user_input)
+        schema = vol.Schema({
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_PORT, default=3000): int,
+        })
 
-        defaults = existing_entry.data if existing_entry else {}
+        return self.async_show_form(step_id="user", data_schema=schema)
 
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_BASE_URL, default=defaults.get(CONF_BASE_URL, "")): str,
-                vol.Required(CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)): int,
-            }
-        )
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return WhatsAppOptionsFlow(config_entry)
 
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+class WhatsAppOptionsFlow(config_entries.OptionsFlow):
+    """Handle options after setup."""
+
+    def __init__(self, config_entry):
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data = self.config_entry.data
+        options = self.config_entry.options
+
+        schema = vol.Schema({
+            vol.Required(CONF_HOST, default=options.get(CONF_HOST, data.get(CONF_HOST))): str,
+            vol.Required(CONF_PORT, default=options.get(CONF_PORT, data.get(CONF_PORT))): int,
+        })
+
+        return self.async_show_form(step_id="init", data_schema=schema)
