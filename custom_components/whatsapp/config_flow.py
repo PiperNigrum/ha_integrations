@@ -40,12 +40,24 @@ class WhatsAppOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         data = self.config_entry.data
-        options = self.config_entry.options
+        options = self.config_entry.options or {}
 
         schema = vol.Schema({
-            vol.Required(CONF_BASE_URL, default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL))): str,
-            vol.Required(CONF_PORT, default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT))): int,
-            vol.Optional(CONF_API_KEY, default=options.get(CONF_API_KEY, data.get(CONF_API_KEY, ""))): str,
+            vol.Required(
+                CONF_BASE_URL,
+                default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL))
+            ): str,
+
+            vol.Required(
+                CONF_PORT,
+                default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT))
+            ): int,
+
+            # Optional, damit HA nicht crasht, wenn leer
+            vol.Optional(
+                CONF_API_KEY,
+                default=options.get(CONF_API_KEY, data.get(CONF_API_KEY, ""))
+            ): str,
         })
 
         return self.async_show_form(step_id="init", data_schema=schema)
