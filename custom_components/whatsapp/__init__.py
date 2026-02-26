@@ -19,14 +19,10 @@ def _build_target_url(base: Optional[str], port: Optional[int], chat_id: str) ->
     base = (base or "").rstrip("/")
     parsed = urlparse(base)
 
-    # Wenn kein Schema angegeben wurde → http als Default
     scheme = parsed.scheme or "http"
-
-    # netloc korrekt extrahieren
     netloc = parsed.netloc or parsed.path
     host_part = netloc.split("@")[-1]
 
-    # Port anhängen, wenn nicht vorhanden
     if port and ":" not in host_part:
         netloc = f"{netloc}:{port}"
 
@@ -38,9 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    #
-    # 🔧 MIGRATION: Fehlende Felder ergänzen (z. B. api_key)
-    #
+    # MIGRATION: fehlende Felder ergänzen
     updated = False
     data = dict(entry.data)
 
@@ -51,12 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if updated:
         hass.config_entries.async_update_entry(entry, data=data)
 
-    #
-    # Daten + Optionen zusammenführen
-    #
+    # Sicheres Zusammenführen von data + options
     hass.data[DOMAIN]["config"] = {
         **entry.data,
-        **entry.options,
+        **(entry.options or {}),
     }
 
     session = async_get_clientsession(hass)
@@ -138,23 +130,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await _post_json(target, payload, api_key)
 
-    #
     # Services registrieren (nur einmal)
-    #
     services_registered = hass.data[DOMAIN].setdefault("services_registered", False)
     if not services_registered:
         hass.services.async_register(DOMAIN, SERVICE_SEND_MESSAGE, _handle_send_message)
         hass.services.async_register(DOMAIN, SERVICE_SEND_MEDIA, _handle_send_media)
         hass.data[DOMAIN]["services_registered"] = True
 
-    #
-    # Update Listener → aktualisiert hass.data bei Änderungen im Options‑Flow
-    #
+    # Update Listener
     async def _async_update_listener(hass_inner: HomeAssistant, updated_entry: ConfigEntry) -> None:
         hass_inner.data.setdefault(DOMAIN, {})
         hass_inner.data[DOMAIN]["config"] = {
             **updated_entry.data,
-            **updated_entry.options,
+            **(updated_entry.options or {}),
         }
         _LOGGER.debug("WhatsApp config updated: %s", hass_inner.data[DOMAIN]["config"])
 
