@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, CONF_BASE_URL, CONF_PORT, DEFAULT_PORT
+from .const import DOMAIN, CONF_BASE_URL, CONF_PORT, CONF_API_KEY, DEFAULT_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,11 +15,10 @@ SERVICE_SEND_MEDIA = "send_media"
 
 
 def _build_target_url(base: Optional[str], port: Optional[int], chat_id: str) -> str:
-    """Build URL for POSTing to /api/chats/{chat_id}/messages, respecting optional port."""
     base = (base or "").rstrip("/")
     parsed = urlparse(base)
     scheme = parsed.scheme or "http"
-    netloc = parsed.netloc or parsed.path  # handle if user passed without scheme
+    netloc = parsed.netloc or parsed.path
     host_part = netloc.split("@")[-1]
     if port and ":" not in host_part:
         netloc = f"{netloc}:{port}"
@@ -27,21 +26,20 @@ def _build_target_url(base: Optional[str], port: Optional[int], chat_id: str) ->
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up WhatsApp services from a single config entry."""
-
     hass.data.setdefault(DOMAIN, {})
 
-    # ❗ Änderung 1: Optionen haben Vorrang vor data
+    # Optionen überschreiben data
     hass.data[DOMAIN]["config"] = {
         **entry.data,
-        **entry.options,   # ← geändert
+        **entry.options,
     }
 
     session = async_get_clientsession(hass)
 
-    async def _post_json(url: str, payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def _post_json(url: str, payload: Dict[str, Any], api_key: str) -> Optional[Dict[str, Any]]:
+        headers = {"x-api-key": api_key} if api_key else {}
         try:
-            resp = await session.post(url, json=payload, timeout=30)
+            resp = await session.post(url, json=payload, headers=headers, timeout=30)
             resp.raise_for_status()
             try:
                 return await resp.json()
@@ -63,14 +61,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if title:
             message = f"*{title}*\n{message}"
 
-        # Immer die neuesten Werte aus hass.data lesen
         cfg = hass.data.get(DOMAIN, {}).get("config", {})
         base = cfg.get(CONF_BASE_URL)
         port = cfg.get(CONF_PORT, DEFAULT_PORT)
+        api_key = cfg.get(CONF_API_KEY, "")
 
         url = _build_target_url(base, port, chat_id)
         payload = {"msg": message}
-        await _post_json(url, payload)
+
+        await _post_json(url, payload, api_key)
 
     async def _handle_send_media(call: ServiceCall) -> None:
         chat_id = call.data.get("chat_id")
@@ -92,6 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cfg = hass.data.get(DOMAIN, {}).get("config", {})
         base = cfg.get(CONF_BASE_URL)
         port = cfg.get(CONF_PORT, DEFAULT_PORT)
+        api_key = cfg.get(CONF_API_KEY, "")
 
         target = _build_target_url(base, port, chat_id)
         payload = {
@@ -109,21 +109,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         payload["options"] = {k: v for k, v in payload["options"].items() if v is not None}
 
-        await _post_json(target, payload)
+        await _post_json(target, payload, api_key)
 
-    # Register services only once
+    # Services nur einmal registrieren
     services_registered = hass.data[DOMAIN].setdefault("services_registered", False)
     if not services_registered:
         hass.services.async_register(DOMAIN, SERVICE_SEND_MESSAGE, _handle_send_message)
         hass.services.async_register(DOMAIN, SERVICE_SEND_MEDIA, _handle_send_media)
         hass.data[DOMAIN]["services_registered"] = True
 
-    # ❗ Änderung 2: Update listener muss auch options berücksichtigen
     async def _async_update_listener(hass_inner: HomeAssistant, updated_entry: ConfigEntry) -> None:
         hass_inner.data.setdefault(DOMAIN, {})
         hass_inner.data[DOMAIN]["config"] = {
             **updated_entry.data,
-            **updated_entry.options,   # ← geändert
+            **updated_entry.options,
         }
         _LOGGER.debug("WhatsApp config entry updated, new config stored in hass.data[%s]['config']", DOMAIN)
 
@@ -133,16 +132,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload config entry and remove services."""
     try:
         hass.services.async_remove(DOMAIN, SERVICE_SEND_MESSAGE)
     except Exception:
-        _LOGGER.debug("Could not remove service %s.%s", DOMAIN, SERVICE_SEND_MESSAGE)
+        pass
 
     try:
         hass.services.async_remove(DOMAIN, SERVICE_SEND_MEDIA)
     except Exception:
-        _LOGGER.debug("Could not remove service %s.%s", DOMAIN, SERVICE_SEND_MEDIA)
+        pass
 
     hass.data.get(DOMAIN, {}).pop("config", None)
     hass.data.get(DOMAIN, {}).pop("services_registered", None)
