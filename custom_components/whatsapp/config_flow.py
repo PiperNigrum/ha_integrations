@@ -45,7 +45,7 @@ class WhatsAppOptionsFlow(config_entries.OptionsFlow):
         schema = vol.Schema({
             vol.Required(CONF_BASE_URL, default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL))): str,
             vol.Required(CONF_PORT, default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT))): int,
-            vol.Required(CONF_API_KEY, default=options.get(CONF_API_KEY, data.get(CONF_API_KEY, ""))): str,
+            vol.Optional(CONF_API_KEY, default=options.get(CONF_API_KEY, data.get(CONF_API_KEY, ""))): str,
         })
 
         return self.async_show_form(step_id="init", data_schema=schema)
