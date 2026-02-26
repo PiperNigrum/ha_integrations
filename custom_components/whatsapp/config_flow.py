@@ -4,12 +4,10 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .const import DOMAIN, CONF_BASE_URL, CONF_PORT, DEFAULT_PORT
+from .const import DOMAIN, CONF_BASE_URL, CONF_PORT, CONF_API_KEY, DEFAULT_PORT
 
 
 class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle the initial config flow."""
-
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
@@ -20,15 +18,9 @@ class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         schema = vol.Schema({
-            vol.Required(
-                CONF_BASE_URL,
-                description="Host / Base URL"
-            ): str,
-            vol.Required(
-                CONF_PORT,
-                default=DEFAULT_PORT,
-                description="Port"
-            ): int,
+            vol.Required(CONF_BASE_URL): str,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+            vol.Required(CONF_API_KEY): str,
         })
 
         return self.async_show_form(step_id="user", data_schema=schema)
@@ -40,8 +32,6 @@ class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class WhatsAppOptionsFlow(config_entries.OptionsFlow):
-    """Handle options after setup."""
-
     def __init__(self, config_entry):
         self.config_entry = config_entry
 
@@ -53,16 +43,9 @@ class WhatsAppOptionsFlow(config_entries.OptionsFlow):
         options = self.config_entry.options
 
         schema = vol.Schema({
-            vol.Required(
-                CONF_BASE_URL,
-                default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL)),
-                description="Host / Base URL"
-            ): str,
-            vol.Required(
-                CONF_PORT,
-                default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT)),
-                description="Port"
-            ): int,
+            vol.Required(CONF_BASE_URL, default=options.get(CONF_BASE_URL, data.get(CONF_BASE_URL))): str,
+            vol.Required(CONF_PORT, default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT))): int,
+            vol.Required(CONF_API_KEY, default=options.get(CONF_API_KEY, data.get(CONF_API_KEY, ""))): str,
         })
 
         return self.async_show_form(step_id="init", data_schema=schema)
