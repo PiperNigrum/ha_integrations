@@ -3,8 +3,8 @@ send_message:
   description: Sendet eine WhatsApp Nachricht
   fields:
     chat_id:
-      description: Empfänger (nur Ziffern, z.B. 4915112345678)
-      example: "4915112345678"
+      description: "Empfänger. Einzelperson: 49XXXXXXXXXXXX@s.whatsapp.net – Gruppe: 123456789@g.us"
+      example: "49XXXXXXXXXXXX@s.whatsapp.net"
       required: true
       selector:
         text:
@@ -26,14 +26,14 @@ send_media:
   description: Sendet Medien über die WhatsApp API
   fields:
     chat_id:
-      description: Empfänger (nur Ziffern, z.B. 4915112345678)
-      example: "4915112345678"
+      description: "Empfänger. Einzelperson: 49XXXXXXXXXXXX@s.whatsapp.net – Gruppe: 123456789@g.us"
+      example: "49XXXXXXXXXXXX@s.whatsapp.net"
       required: true
       selector:
         text:
     url:
       description: Medien-URL
-      example: "https://example.com/bild.jpg"
+      example: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4"
       required: true
       selector:
         text:
