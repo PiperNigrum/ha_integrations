@@ -1,6 +1,8 @@
 from typing import Any, Dict, Optional
 import logging
-from urllib.parse import urlparse, urlunparse
+import re
+import aiohttp
+from urllib.parse import urlparse, urlunparse, quote
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.config_entries import ConfigEntry
@@ -13,20 +15,35 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_MEDIA = "send_media"
 
+_CHAT_ID_RE = re.compile(r"^\d{7,15}$")
+
+
+def _normalize_url(url: str) -> str:
+    """Ergänzt https:// falls kein Schema angegeben ist."""
+    url = url.strip().rstrip("/")
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = f"https://{url}"
+    return url
+
 
 def _build_target_url(base: Optional[str], port: Optional[int], chat_id: str) -> str:
     """Build URL for POSTing to /api/chats/{chat_id}/messages."""
-    base = (base or "").rstrip("/")
+    base = _normalize_url(base or "")
     parsed = urlparse(base)
 
-    scheme = parsed.scheme or "http"
+    scheme = parsed.scheme
     netloc = parsed.netloc or parsed.path
     host_part = netloc.split("@")[-1]
 
     if port and ":" not in host_part:
         netloc = f"{netloc}:{port}"
 
-    return urlunparse((scheme, netloc, f"/api/chats/{chat_id}/messages", "", "", ""))
+    return urlunparse((scheme, netloc, f"/api/chats/{quote(chat_id, safe='')}/messages", "", "", ""))
+
+
+def _validate_chat_id(chat_id: str) -> bool:
+    """Prüft ob chat_id nur aus Ziffern besteht (7–15 Stellen)."""
+    return bool(_CHAT_ID_RE.match(chat_id))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -52,12 +69,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     session = async_get_clientsession(hass)
+    _timeout = aiohttp.ClientTimeout(total=30)
 
     async def _post_json(url: str, payload: Dict[str, Any], api_key: str) -> Optional[Dict[str, Any]]:
         headers = {"x-api-key": api_key} if api_key else {}
 
         try:
-            resp = await session.post(url, json=payload, headers=headers, timeout=30)
+            resp = await session.post(url, json=payload, headers=headers, timeout=_timeout)
             resp.raise_for_status()
             try:
                 return await resp.json()
@@ -74,6 +92,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if not chat_id:
             _LOGGER.error("whatsapp.send_message called without chat_id")
+            return
+
+        if not _validate_chat_id(chat_id):
+            _LOGGER.error("whatsapp.send_message: ungültige chat_id: %s", chat_id)
             return
 
         if title:
@@ -99,9 +121,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("whatsapp.send_media called without chat_id")
             return
 
+        if not _validate_chat_id(chat_id):
+            _LOGGER.error("whatsapp.send_media: ungültige chat_id: %s", chat_id)
+            return
+
         if not url_media:
             _LOGGER.error("whatsapp.send_media called without url")
             return
+
+        # URL bereinigen
+        url_media = url_media.strip()
 
         if title:
             caption = f"*{title}*\n{caption}"
@@ -113,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         target = _build_target_url(base, port, chat_id)
         payload = {
-            "url": url_media.replace("\n", ""),
+            "url": url_media,
             "options": {
                 "caption": caption,
                 "sendMediaAsDocument": bool(call.data.get("sendMediaAsDocument", False)),
@@ -144,7 +173,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             **updated_entry.data,
             **(updated_entry.options or {}),
         }
-        _LOGGER.debug("WhatsApp config updated: %s", hass_inner.data[DOMAIN]["config"])
+        # Maskiertes Logging – API-Key wird nicht im Klartext geloggt
+        safe_config = {
+            k: ("***" if k == CONF_API_KEY else v)
+            for k, v in hass_inner.data[DOMAIN]["config"].items()
+        }
+        _LOGGER.debug("WhatsApp config updated: %s", safe_config)
 
     entry.add_update_listener(_async_update_listener)
 
@@ -163,6 +197,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         pass
 
     hass.data.get(DOMAIN, {}).pop("config", None)
-    hass.data.get(DOMAIN, {}).pop("services_registered", None)
+    # Explizit auf False setzen, damit async_setup_entry nach erneutem Laden korrekt arbeitet
+    hass.data.get(DOMAIN, {})["services_registered"] = False
 
     return True

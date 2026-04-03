@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up WhatsApp",
+        "description": "Enter the connection details for your WhatsApp API server.",
+        "data": {
+          "base_url": "Server Address",
+          "port": "Port",
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "base_url": "Hostname or IP address of your WhatsApp API server (e.g. myserver.local or 192.168.1.100). https:// will be added automatically.",
+          "port": "Port of your WhatsApp API server.",
+          "api_key": "API key to authenticate against your WhatsApp API server."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure WhatsApp",
+        "description": "Update the connection details for your WhatsApp API server.",
+        "data": {
+          "base_url": "Server Address",
+          "port": "Port",
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "base_url": "Hostname or IP address of your WhatsApp API server. https:// will be added automatically.",
+          "port": "Port of your WhatsApp API server.",
+          "api_key": "API key to authenticate against your WhatsApp API server."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "WhatsApp Options",
+        "description": "Update the connection details for your WhatsApp API server.",
+        "data": {
+          "base_url": "Server Address",
+          "port": "Port",
+          "api_key": "API Key"
+        },
+        "data_description": {
+          "base_url": "Hostname or IP address of your WhatsApp API server. https:// will be added automatically.",
+          "port": "Port of your WhatsApp API server.",
+          "api_key": "API key to authenticate against your WhatsApp API server. Leave empty if not required."
+        }
+      }
+    }
+  }
+}

@@ -3,49 +3,82 @@ send_message:
   description: Sendet eine WhatsApp Nachricht
   fields:
     chat_id:
-      description: Empfänger
-      example: "@s.whatsapp.net / @g.us"
+      description: Empfänger (nur Ziffern, z.B. 4915112345678)
+      example: "4915112345678"
+      required: true
+      selector:
+        text:
     title:
       description: Titel (optional). Wird als *Titel* vor die Nachricht gesetzt.
       example: "Wichtig"
+      selector:
+        text:
     message:
       description: Nachrichtentext
       example: "Hallo Welt"
+      required: true
+      selector:
+        text:
+          multiline: true
 
 send_media:
   name: Medium senden
   description: Sendet Medien über die WhatsApp API
   fields:
     chat_id:
-      description: Empfänger
-      example: "@s.whatsapp.net / @g.us"
+      description: Empfänger (nur Ziffern, z.B. 4915112345678)
+      example: "4915112345678"
+      required: true
+      selector:
+        text:
     url:
       description: Medien-URL
-      example: "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_1MB.mp4"
+      example: "https://example.com/bild.jpg"
+      required: true
+      selector:
+        text:
     title:
       description: Titel (optional). Wird als *Titel* vor die Caption gesetzt.
       example: "Wichtig"
+      selector:
+        text:
     caption:
       description: Bild-/Video-Untertitel
-      example: "Big Buck Bunny"
+      example: "Mein Foto"
+      selector:
+        text:
     sendMediaAsDocument:
       description: Als Dokument senden
       default: false
+      selector:
+        boolean:
     sendAudioAsVoice:
       description: Audio als Voice senden
       default: false
+      selector:
+        boolean:
     sendVideoAsGif:
       description: Video als GIF senden
       default: false
+      selector:
+        boolean:
     sendMediaAsSticker:
       description: Als Sticker senden
       default: false
+      selector:
+        boolean:
     sendMediaAsHd:
-      description: in HD senden
+      description: In HD senden
       default: false
+      selector:
+        boolean:
     isViewOnce:
       description: Einmaliges Ansehen
       default: false
+      selector:
+        boolean:
     linkPreview:
       description: Link Preview
       default: false
+      selector:
+        boolean:

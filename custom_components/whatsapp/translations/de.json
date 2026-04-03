@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WhatsApp einrichten",
+        "description": "Gib die Verbindungsdaten deines WhatsApp-API-Servers ein.",
+        "data": {
+          "base_url": "Server-Adresse",
+          "port": "Port",
+          "api_key": "API-Schlüssel"
+        },
+        "data_description": {
+          "base_url": "Hostname oder IP-Adresse deines WhatsApp-API-Servers (z.B. meinserver.local oder 192.168.1.100). https:// wird automatisch ergänzt.",
+          "port": "Port deines WhatsApp-API-Servers.",
+          "api_key": "API-Schlüssel zur Authentifizierung an deinem WhatsApp-API-Server."
+        }
+      },
+      "reconfigure": {
+        "title": "WhatsApp neu konfigurieren",
+        "description": "Aktualisiere die Verbindungsdaten deines WhatsApp-API-Servers.",
+        "data": {
+          "base_url": "Server-Adresse",
+          "port": "Port",
+          "api_key": "API-Schlüssel"
+        },
+        "data_description": {
+          "base_url": "Hostname oder IP-Adresse deines WhatsApp-API-Servers. https:// wird automatisch ergänzt.",
+          "port": "Port deines WhatsApp-API-Servers.",
+          "api_key": "API-Schlüssel zur Authentifizierung an deinem WhatsApp-API-Server."
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "WhatsApp Optionen",
+        "description": "Aktualisiere die Verbindungsdaten deines WhatsApp-API-Servers.",
+        "data": {
+          "base_url": "Server-Adresse",
+          "port": "Port",
+          "api_key": "API-Schlüssel"
+        },
+        "data_description": {
+          "base_url": "Hostname oder IP-Adresse deines WhatsApp-API-Servers. https:// wird automatisch ergänzt.",
+          "port": "Port deines WhatsApp-API-Servers.",
+          "api_key": "API-Schlüssel zur Authentifizierung an deinem WhatsApp-API-Server. Leer lassen falls nicht benötigt."
+        }
+      }
+    }
+  }
+}
