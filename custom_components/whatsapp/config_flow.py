@@ -25,15 +25,32 @@ class WhatsAppConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema)
 
+    async def async_step_reconfigure(self, user_input=None):
+        """Ermöglicht das Neukonfigurieren eines bestehenden Eintrags."""
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates=user_input,
+            )
+
+        schema = vol.Schema({
+            vol.Required(CONF_BASE_URL, default=entry.data.get(CONF_BASE_URL, "")): str,
+            vol.Required(CONF_PORT, default=entry.data.get(CONF_PORT, DEFAULT_PORT)): int,
+            vol.Required(CONF_API_KEY, default=entry.data.get(CONF_API_KEY, "")): str,
+        })
+
+        return self.async_show_form(step_id="reconfigure", data_schema=schema)
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        return WhatsAppOptionsFlow(config_entry)
+        return WhatsAppOptionsFlow()
 
 
 class WhatsAppOptionsFlow(config_entries.OptionsFlow):
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
+    # KEIN __init__ mehr – config_entry ist bereits in der Basisklasse verfügbar
 
     async def async_step_init(self, user_input=None):
         if user_input is not None:
@@ -53,7 +70,6 @@ class WhatsAppOptionsFlow(config_entries.OptionsFlow):
                 default=options.get(CONF_PORT, data.get(CONF_PORT, DEFAULT_PORT))
             ): int,
 
-            # Optional, damit HA nicht crasht, wenn leer
             vol.Optional(
                 CONF_API_KEY,
                 default=options.get(CONF_API_KEY, data.get(CONF_API_KEY, ""))
