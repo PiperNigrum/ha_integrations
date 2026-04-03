@@ -41,9 +41,9 @@ def _build_target_url(base: Optional[str], port: Optional[int], chat_id: str) ->
     return urlunparse((scheme, netloc, f"/api/chats/{quote(chat_id, safe='')}/messages", "", "", ""))
 
 
-def _validate_chat_id(chat_id: str) -> bool:
+def _validate_chat_id(chat_id) -> bool:
     """Prüft ob chat_id nur aus Ziffern besteht (7–15 Stellen)."""
-    return bool(_CHAT_ID_RE.match(chat_id))
+    return bool(_CHAT_ID_RE.match(str(chat_id)))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -94,6 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("whatsapp.send_message called without chat_id")
             return
 
+        chat_id = str(chat_id)
         if not _validate_chat_id(chat_id):
             _LOGGER.error("whatsapp.send_message: ungültige chat_id: %s", chat_id)
             return
@@ -121,6 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("whatsapp.send_media called without chat_id")
             return
 
+        chat_id = str(chat_id)
         if not _validate_chat_id(chat_id):
             _LOGGER.error("whatsapp.send_media: ungültige chat_id: %s", chat_id)
             return

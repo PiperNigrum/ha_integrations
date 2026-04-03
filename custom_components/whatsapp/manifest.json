@@ -1,7 +1,7 @@
 {
   "domain": "whatsapp",
   "name": "WhatsApp Client",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "documentation": "https://github.com/PiperNigrum",
   "requirements": [],
   "codeowners": ["@PiperNigrum"],
