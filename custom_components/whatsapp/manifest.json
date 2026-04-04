@@ -1,7 +1,7 @@
 {
   "domain": "whatsapp",
   "name": "WhatsApp Client",
-  "version": "2.5.0",
+  "version": "2.7.0",
   "documentation": "https://github.com/PiperNigrum/hacs_whatsapp_client",
   "requirements": [],
   "codeowners": [
